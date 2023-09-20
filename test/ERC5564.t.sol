@@ -2,109 +2,101 @@
 pragma solidity 0.8.19;
 
 import {Test, console2} from "forge-std/Test.sol";
-import {ERC5564TransferETH} from "../src/ERC5564TransferETH.sol";
 import {ERC5564Announcer} from "../src/ERC5564Announcer.sol";
-import {ERC5564MultiTransfer} from "../src/ERC5564MultiTransfer.sol";
+import {ERC5564Registry} from "../src/ERC5564Registry.sol";
+import {ERC5564DirectTransfers} from "../src/ERC5564DirectTransfers.sol";
+import {TestERC20} from "../src/test/TestERC20.sol";
+import {TestERC721} from "../src/test/TestERC721.sol";
 
-contract CounterTest is Test {
-    ERC5564TransferETH public transferrer;
+// solhint-disable func-name-mixedcase
+
+contract ERC5564Test is Test {
     ERC5564Announcer public announcer;
-    ERC5564MultiTokenTransfer public mtWithFee;
-    ERC5564MultiTokenTransfer public mtNoFee;
+    ERC5564DirectTransfers public transferrer;
+    TestERC20 public tokenA;
+    TestERC20 public tokenB;
+    TestERC721 public nft;
+    ERC5564Registry public registry;
 
     function setUp() public {
         announcer = new ERC5564Announcer();
-        transferrer = new ERC5564TransferETH(address(announcer), 10**16);
-        mtWithFee = new ERC5564MultiTokenTransfer(address(announcer), 10**15);
-        mtNoFee = new ERC5564MultiTokenTransfer(address(announcer), 0);
+        transferrer = new ERC5564DirectTransfers(address(announcer), 10**15);
+        registry = new ERC5564Registry();
+
+        tokenA = new TestERC20(2**200);
+        tokenB = new TestERC20(2**200);
+        nft = new TestERC721(12);
+
+        tokenA.approve(address(transferrer), 2**100);
+        tokenB.approve(address(transferrer), 2**100);
+        nft.approve(address(transferrer), 1);
     }
 
     function test_stealthTransfer() public {
+        address[] memory addys = new address[](3);
+        addys[0] = address(tokenA);
+        addys[1] = address(tokenB);
+        addys[2] = address(nft);
+        uint256[] memory nums = new uint256[](3);
+        nums[0] = 10**18;
+        nums[1] = 2**129;
+        nums[2] = 1;
+
+        tokenB.approve(address(transferrer), 2**200);
         transferrer.stealthTransfer{value: 10**16}(
             0,
             0xBbC640bD5FcbCBe3bb7D6570A2bd94E2d7441BB1,
             bytes(hex"02dc2fd7137fe03c1c26a943e07e525518b32ee1818ccd2b6bbae3218b746a06de"),
-            196
+            196,
+            addys,
+            nums
         );
 
-        vm.expectRevert(ERC5564TransferETH.InsufficientMsgValue.selector);
-
-        transferrer.stealthTransfer{value: 10**16-1}(
+        tokenB.approve(address(transferrer), 2**128);
+        vm.expectRevert();
+        transferrer.stealthTransfer{value: 10**16}(
             0,
             0xBbC640bD5FcbCBe3bb7D6570A2bd94E2d7441BB1,
             bytes(hex"02dc2fd7137fe03c1c26a943e07e525518b32ee1818ccd2b6bbae3218b746a06de"),
-            196
+            196,
+            addys,
+            nums
         );
+
+        vm.expectRevert(ERC5564DirectTransfers.InsufficientMsgValue.selector);
+        transferrer.stealthTransfer{value: 10**15-1}(
+            0,
+            0xBbC640bD5FcbCBe3bb7D6570A2bd94E2d7441BB1,
+            bytes(hex"02dc2fd7137fe03c1c26a943e07e525518b32ee1818ccd2b6bbae3218b746a06de"),
+            196,
+            addys,
+            nums
+        );
+        
+        nums = new uint256[](2);
+        nums[0] = 1000;
+        nums[1] = 1 ether;
+        
+        vm.expectRevert(ERC5564DirectTransfers.ArrayLengthMismatch.selector);
+        transferrer.stealthTransfer{value: 10**15}(
+            0,
+            0xBbC640bD5FcbCBe3bb7D6570A2bd94E2d7441BB1,
+            bytes(hex"02dc2fd7137fe03c1c26a943e07e525518b32ee1818ccd2b6bbae3218b746a06de"),
+            196,
+            addys,
+            nums
+        );
+
     }
 
-    function test_stealthTransferCustom() public {
-        bytes memory metadata = new bytes(57);
-        assembly {
-            mstore8(add(metadata, 0x20), 0xec)
-            mstore(add(metadata, 0x21), 0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee0000000000000000)
-            mstore(add(metadata, 0x39), 0x2386f26fc10000)
-        }
-        transferrer.stealthTransferCustom{value: 0x2386f26fc10000}(
-            0,
-            0xBbC640bD5FcbCBe3bb7D6570A2bd94E2d7441BB1,
-            bytes(hex"02dc2fd7137fe03c1c26a943e07e525518b32ee1818ccd2b6bbae3218b746a06de"),
-            metadata
-        );
+    function test_stealthTransfer1ERC20Gas() public {
+        address[] memory addys = new address[](1);
+        addys[0] = address(tokenA);
 
-        vm.expectRevert(ERC5564TransferETH.InsufficientMsgValue.selector);
-        transferrer.stealthTransferCustom{value: 0x2386f26fc0ffff}(
-            0,
-            0xBbC640bD5FcbCBe3bb7D6570A2bd94E2d7441BB1,
-            bytes(hex"02dc2fd7137fe03c1c26a943e07e525518b32ee1818ccd2b6bbae3218b746a06de"),
-            metadata
-        );
+        uint256[] memory nums = new uint256[](1);
+        nums[0] = 100 ether;
 
-        assembly {
-            mstore(add(metadata, 0x39), 0x2386f26fc0ffff)
-        }
-
-        vm.expectRevert(ERC5564TransferETH.MalformattedMetadata.selector);
-        transferrer.stealthTransferCustom{value: 0x2386f26fc10000}(
-            0,
-            0xBbC640bD5FcbCBe3bb7D6570A2bd94E2d7441BB1,
-            bytes(hex"02dc2fd7137fe03c1c26a943e07e525518b32ee1818ccd2b6bbae3218b746a06de"),
-            metadata
-        );
-
-        assembly {
-            mstore(add(metadata, 0x21), 0x0eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee0000000000000000)
-            mstore(add(metadata, 0x39), 0x2386f26fc10000)
-        }
-
-        vm.expectRevert(ERC5564TransferETH.MalformattedMetadata.selector);
-        transferrer.stealthTransferCustom{value: 0x2386f26fc10000}(
-            0,
-            0xBbC640bD5FcbCBe3bb7D6570A2bd94E2d7441BB1,
-            bytes(hex"02dc2fd7137fe03c1c26a943e07e525518b32ee1818ccd2b6bbae3218b746a06de"),
-            metadata
-        );
-
-        assembly {
-            mstore(add(metadata, 0x21), 0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee0000000000000000)
-            mstore(add(metadata, 0x39), 0xffffffffffffff)
-        }
-
-        transferrer.stealthTransferCustom{value: 0xffffffffffffff}(
-            0,
-            0xBbC640bD5FcbCBe3bb7D6570A2bd94E2d7441BB1,
-            bytes(hex"02dc2fd7137fe03c1c26a943e07e525518b32ee1818ccd2b6bbae3218b746a06de"),
-            metadata
-        );
-    }
-
-    function test_stealthMultiTransfer() public {
-        address[] memory addys = new address[](2);
-        addys[0] = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2;
-        addys[1] = 0x5Af0D9827E0c53E4799BB226655A1de152A425a5;
-        uint256[] memory nums = new uint256[](2);
-        nums[0] = 10**18;
-        nums[1] = 1;
-        mtWithFee.stealthMultiTransfer{value: 10**16}(
+        transferrer.stealthTransfer{value: 10**16}(
             0,
             0xBbC640bD5FcbCBe3bb7D6570A2bd94E2d7441BB1,
             bytes(hex"02dc2fd7137fe03c1c26a943e07e525518b32ee1818ccd2b6bbae3218b746a06de"),
@@ -114,8 +106,246 @@ contract CounterTest is Test {
         );
     }
 
-    // function testFuzz_SetNumber(uint256 x) public {
-    //     counter.setNumber(x);
-    //     assertEq(counter.number(), x);
-    // }
+    function test_stealthTransfer1NFTGas() public {
+        address[] memory addys = new address[](1);
+        addys[0] = address(nft);
+
+        uint256[] memory nums = new uint256[](1);
+        nums[0] = 1;
+
+        transferrer.stealthTransfer{value: 10**16}(
+            0,
+            0xBbC640bD5FcbCBe3bb7D6570A2bd94E2d7441BB1,
+            bytes(hex"02dc2fd7137fe03c1c26a943e07e525518b32ee1818ccd2b6bbae3218b746a06de"),
+            196,
+            addys,
+            nums
+        );
+    }
+
+    function test_stealthTransferOnlyETHGas() public {
+        address[] memory a;
+        uint256[] memory b;
+        transferrer.stealthTransfer{value: 1 ether}(
+            0,
+            0xBbC640bD5FcbCBe3bb7D6570A2bd94E2d7441BB1,
+            bytes(hex"02dc2fd7137fe03c1c26a943e07e525518b32ee1818ccd2b6bbae3218b746a06de"),
+            196,
+            a,
+            b
+        );
+    }
+
+    function test_stealthTransferExtendedMetadata() public {
+        address[] memory tokens = new address[](2);
+        tokens[0] = address(tokenA);
+        tokens[1] = address(tokenB);
+        uint256[] memory values = new uint256[](2);
+        values[0] = 10 ether;
+        values[1] = 100 ether;
+        bytes memory metadata = transferrer.getMetadata(
+            1 ether,
+            234,
+            tokens,
+            values
+        );
+
+        (address[] memory tCheck, uint256[] memory vCheck) = transferrer.parseMetadata(
+            1 ether,
+            metadata
+        );
+
+        assertEq(tCheck.length, vCheck.length);
+        assertEq(tokens.length, tCheck.length);
+        for (uint256 i=0; i<tCheck.length; i++) {
+            assertEq(tokens[i], tCheck[i]);
+            assertEq(values[i], vCheck[i]);
+        }
+
+        transferrer.stealthTransferExtendedMetadata{value: 1 ether}(
+            0, 
+            0xBbC640bD5FcbCBe3bb7D6570A2bd94E2d7441BB1,
+            bytes(hex"02dc2fd7137fe03c1c26a943e07e525518b32ee1818ccd2b6bbae3218b746a06de"),
+            metadata
+        );
+
+        address token = address(tokenA);
+        uint256 metadataLen = 150;
+        bytes memory metadata2 = new bytes(metadataLen);
+        assembly {
+            mstore8(add(metadata2, 0x20), 0xef)
+            mstore(add(metadata2, 0x21), 0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee0000000000000000)
+            mstore(add(metadata2, 0x39), 0xffffffffffffffff)
+            mstore(add(metadata2, 0x59), shl(0xe0, 0x23b872dd))
+            mstore(add(metadata2, 0x5d), shl(0x60, token))
+            mstore(add(metadata2, 0x71), 0xffffffffffffffffffff)
+            mstore(add(metadata2, 0x91), 0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa)
+        }
+
+        uint256 balanceBefore = tokenA.balanceOf(address(this));
+        transferrer.stealthTransferExtendedMetadata{value: 0xffffffffffffffff}(
+            0, 
+            0xBbC640bD5FcbCBe3bb7D6570A2bd94E2d7441BB1,
+            bytes(hex"02dc2fd7137fe03c1c26a943e07e525518b32ee1818ccd2b6bbae3218b746a06de"),
+            metadata2
+        );
+
+        uint256 balanceAfter = tokenA.balanceOf(address(this));
+        assertEq(balanceBefore-balanceAfter, 0xffffffffffffffffffff);
+
+        vm.expectRevert(ERC5564DirectTransfers.MalformattedMetadata.selector);
+        transferrer.stealthTransferExtendedMetadata{value: 0xfffffffffffffffd}(
+            0, 
+            0xBbC640bD5FcbCBe3bb7D6570A2bd94E2d7441BB1,
+            bytes(hex"02dc2fd7137fe03c1c26a943e07e525518b32ee1818ccd2b6bbae3218b746a06de"),
+            metadata2
+        );
+
+        vm.expectRevert(ERC5564DirectTransfers.MalformattedMetadata.selector);
+        transferrer.stealthTransferExtendedMetadata{value: 0xffffffffffffffff}(
+            0, 
+            0xBbC640bD5FcbCBe3bb7D6570A2bd94E2d7441BB1,
+            bytes(hex"02dc2fd7137fe03c1c26a943e07e525518b32ee1818ccd2b6bbae3218b746a06de"),
+            new bytes(56)
+        );
+
+        vm.expectRevert(ERC5564DirectTransfers.InsufficientMsgValue.selector);
+        transferrer.stealthTransferExtendedMetadata{value: 10**15-1}(
+            0, 
+            0xBbC640bD5FcbCBe3bb7D6570A2bd94E2d7441BB1,
+            bytes(hex"02dc2fd7137fe03c1c26a943e07e525518b32ee1818ccd2b6bbae3218b746a06de"),
+            metadata2
+        );
+    }
+
+    function test_stealthTransferExtendedMetadataOnlyETHGas() public {
+        bytes memory metadata = new bytes(100);
+        assembly {
+            mstore8(add(metadata, 0x20), 0xef)
+            mstore(add(metadata, 0x21), 0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee0000000000000000)
+            mstore(add(metadata, 0x39), 0xffffffffffffffff)
+            mstore(add(metadata, 0x59), 0xaaaaaaaaaaaaaaaaaaaaaaaaa)
+        }
+        transferrer.stealthTransferExtendedMetadata{value: 0xffffffffffffffff}(
+            0, 
+            0xBbC640bD5FcbCBe3bb7D6570A2bd94E2d7441BB1,
+            bytes(hex"02dc2fd7137fe03c1c26a943e07e525518b32ee1818ccd2b6bbae3218b746a06de"),
+            metadata
+        );
+    }
+
+    function test_stealthTransferExtendedMetadata1ERC20Gas() public {
+        address token = address(tokenA);
+        bytes memory metadata2 = new bytes(140);
+        assembly {
+            mstore8(add(metadata2, 0x20), 0xef)
+            mstore(add(metadata2, 0x21), 0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee0000000000000000)
+            mstore(add(metadata2, 0x39), 0xffffffffffffffff)
+            mstore(add(metadata2, 0x59), shl(0xe0, 0x23b872dd))
+            mstore(add(metadata2, 0x5d), shl(0x60, token))
+            mstore(add(metadata2, 0x71), 0xffffffffffffffffffff)
+            mstore(add(metadata2, 0x91), 0xaaaaaaaaaaaaaa)
+        }
+
+        transferrer.stealthTransferExtendedMetadata{value: 0xffffffffffffffff}(
+            0, 
+            0xBbC640bD5FcbCBe3bb7D6570A2bd94E2d7441BB1,
+            bytes(hex"02dc2fd7137fe03c1c26a943e07e525518b32ee1818ccd2b6bbae3218b746a06de"),
+            metadata2
+        );
+    }
+
+    function test_stealthTransferExtendedMetadata1NFTGas() public {
+        address token = address(nft);
+        bytes memory metadata2 = new bytes(140);
+        assembly {
+            mstore8(add(metadata2, 0x20), 0xef)
+            mstore(add(metadata2, 0x21), 0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee0000000000000000)
+            mstore(add(metadata2, 0x39), 0xffffffffffffffff)
+            mstore(add(metadata2, 0x59), shl(0xe0, 0x23b872dd))
+            mstore(add(metadata2, 0x5d), shl(0x60, token))
+            mstore(add(metadata2, 0x71), 0x01)
+            mstore(add(metadata2, 0x91), 0xaaaaaaaaaaaaaa)
+        }
+
+        transferrer.stealthTransferExtendedMetadata{value: 0xffffffffffffffff}(
+            0, 
+            0xBbC640bD5FcbCBe3bb7D6570A2bd94E2d7441BB1,
+            bytes(hex"02dc2fd7137fe03c1c26a943e07e525518b32ee1818ccd2b6bbae3218b746a06de"),
+            metadata2
+        );
+    }
+
+    function test_noMinTransfer() public {
+        ERC5564DirectTransfers noRateLimit = new ERC5564DirectTransfers(address(announcer), 0);
+        address[] memory x;
+        uint256[] memory y;
+        noRateLimit.stealthTransfer{value: 1 ether}(
+            0, 
+            0xBbC640bD5FcbCBe3bb7D6570A2bd94E2d7441BB1,
+            bytes(hex"02dc2fd7137fe03c1c26a943e07e525518b32ee1818ccd2b6bbae3218b746a06de"),
+            119,
+            x,
+            y
+        );
+
+        x = new address[](1);
+        x[0] = 0xBbC640bD5FcbCBe3bb7D6570A2bd94E2d7441BB1;
+        y = new uint256[](1);
+        y[0] = 1 ether;
+
+        bytes memory metadata = noRateLimit.getMetadata(
+            0,
+            119,
+            x,
+            y
+        );
+
+        assertEq(metadata.length, 57);
+        assertEq(metadata, bytes(hex"7723b872ddBbC640bD5FcbCBe3bb7D6570A2bd94E2d7441BB10000000000000000000000000000000000000000000000000de0b6b3a7640000"));
+
+        (address[] memory tokens, uint256[] memory amounts) = noRateLimit.parseMetadata(
+            0,
+            metadata
+        );
+
+        assertEq(tokens.length, 1);
+        assertEq(amounts.length, 1);
+        assertEq(tokens[0], 0xBbC640bD5FcbCBe3bb7D6570A2bd94E2d7441BB1);
+        assertEq(amounts[0], 1 ether);
+
+        tokenA.approve(address(noRateLimit), 10**25);
+        x[0] = address(tokenA);
+        uint256 balanceBefore = tokenA.balanceOf(address(this));
+        noRateLimit.stealthTransfer(
+            0, 
+            0xBbC640bD5FcbCBe3bb7D6570A2bd94E2d7441BB1,
+            bytes(hex"02dc2fd7137fe03c1c26a943e07e525518b32ee1818ccd2b6bbae3218b746a06de"),
+            119,
+            x,
+            y
+        );
+        uint256 balanceAfter = tokenA.balanceOf(address(this));
+
+        assertEq(balanceBefore-balanceAfter, 1 ether);
+    }
+
+    function test_registry() public {
+        registry.registerKeys(
+            0,
+            bytes(hex"02dc2fd7137fe03c1c26a943e07e525518b32ee1818ccd2b6bbae3218b746a06de")
+        );
+
+        bytes memory result1 = registry.getStealthMetaAddressOf(address(this), 0);
+        bytes memory result2 = registry.stealthMetaAddressOf(abi.encode(address(this)), 0);
+
+        assertEq(
+            result1,
+            bytes(hex"02dc2fd7137fe03c1c26a943e07e525518b32ee1818ccd2b6bbae3218b746a06de")
+        );
+        assertEq(
+            result2,
+            bytes(hex"02dc2fd7137fe03c1c26a943e07e525518b32ee1818ccd2b6bbae3218b746a06de")
+        );
+    }
 }

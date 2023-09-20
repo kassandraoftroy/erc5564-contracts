@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: UNLICENSED
+// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.19;
 
 /// NOTE very slight adaptation to code found here https://eips.ethereum.org/EIPS/eip-5564
