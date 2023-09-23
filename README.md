@@ -8,7 +8,7 @@ ERC5564 contracts for stealth addresses on evm chains
 
 `ERC5564DirectTransfers` - Transfer any ERC20 or ERC721 to a stealth address and announce it
 
-NOT AUDITED - DO NOT USE IN PRODUCTION - USE AT YOUR OWN RISK
+NOT AUDITED - HOMEROLLED CRYPTO - USE AT YOUR OWN RISK
 
 ## Deployments
 
