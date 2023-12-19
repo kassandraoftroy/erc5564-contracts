@@ -63,7 +63,7 @@ contract ERC5564Registry {
             if (ecrecover(hash_, v, r, s) != registrant) revert InvalidSignature();
         }
 
-        stealthMetaAddressOf[abi.encode(msg.sender)][scheme] = stealthMetaAddress;
+        stealthMetaAddressOf[abi.encode(registrant)][scheme] = stealthMetaAddress;
     }
 
     /// NOTE function below is unimplemented, making this an incomplete ERC6538 implementation
