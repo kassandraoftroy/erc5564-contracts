@@ -330,22 +330,30 @@ contract ERC5564Test is Test {
         assertEq(balanceBefore-balanceAfter, 1 ether);
     }
 
-    function test_registry() public {
-        registry.registerKeys(
-            0,
-            bytes(hex"02dc2fd7137fe03c1c26a943e07e525518b32ee1818ccd2b6bbae3218b746a06de")
-        );
+    function test_registry_basic() public {
+        bytes memory pk = bytes(hex"02dc2fd7137fe03c1c26a943e07e525518b32ee1818ccd2b6bbae3218b746a06de");
+        registry.registerKeys(0, pk);
 
         bytes memory result1 = registry.getStealthMetaAddressOf(address(this), 0);
         bytes memory result2 = registry.stealthMetaAddressOf(abi.encode(address(this)), 0);
 
-        assertEq(
-            result1,
-            bytes(hex"02dc2fd7137fe03c1c26a943e07e525518b32ee1818ccd2b6bbae3218b746a06de")
-        );
-        assertEq(
-            result2,
-            bytes(hex"02dc2fd7137fe03c1c26a943e07e525518b32ee1818ccd2b6bbae3218b746a06de")
-        );
+        assertEq(result1, pk);
+        assertEq(result2, pk);
+    }
+
+    function test_registry_on_behalf() public {
+        bytes memory pk = bytes(hex"03dc2fd7137fe03c1c26a943e07e525518b32ee1818ccd2b6bbae3218b746a06de");
+        uint256 priv = 0xabcdef123456789;
+        address signingAddr = vm.addr(priv);
+        uint256 schemeId = 0;
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(priv, keccak256(abi.encode(pk, schemeId)));
+        bytes memory sig = abi.encodePacked(r, s, v); 
+        registry.registerKeysOnBehalf(signingAddr, 0, sig, pk);
+
+        bytes memory result3 = registry.getStealthMetaAddressOf(signingAddr, 0);
+        bytes memory result4 = registry.stealthMetaAddressOf(abi.encode(signingAddr), 0);
+
+        assertEq(result3, pk);
+        assertEq(result4, pk);
     }
 }
