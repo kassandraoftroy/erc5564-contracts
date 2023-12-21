@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.19;
+pragma solidity ^0.8.22;
 
 /// NOTE very slight adaptation to code found here https://eips.ethereum.org/EIPS/eip-5564
 
