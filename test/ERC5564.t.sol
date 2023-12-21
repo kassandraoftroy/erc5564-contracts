@@ -1,12 +1,13 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity 0.8.19;
+pragma solidity 0.8.22;
 
 import {Test, console2} from "forge-std/Test.sol";
+import {Vm} from "forge-std/Vm.sol";
 import {ERC5564Announcer} from "../src/ERC5564Announcer.sol";
 import {ERC5564Registry} from "../src/ERC5564Registry.sol";
 import {ERC5564DirectTransfers} from "../src/ERC5564DirectTransfers.sol";
-import {TestERC20} from "../src/test/TestERC20.sol";
-import {TestERC721} from "../src/test/TestERC721.sol";
+import {TestERC20} from "./utils/TestERC20.sol";
+import {TestERC721} from "./utils/TestERC721.sol";
 
 // solhint-disable func-name-mixedcase
 
@@ -21,7 +22,7 @@ contract ERC5564Test is Test {
     function setUp() public {
         announcer = new ERC5564Announcer();
         transferrer = new ERC5564DirectTransfers(address(announcer), 10**15);
-        registry = new ERC5564Registry();
+        registry = new ERC5564Registry(0x00000000000C2E074eC69A0dFb2997BA6C7d2e1e);
 
         tokenA = new TestERC20(2**200);
         tokenB = new TestERC20(2**200);
@@ -334,11 +335,8 @@ contract ERC5564Test is Test {
         bytes memory pk = bytes(hex"02dc2fd7137fe03c1c26a943e07e525518b32ee1818ccd2b6bbae3218b746a06de");
         registry.registerKeys(0, pk);
 
-        bytes memory result1 = registry.getStealthMetaAddressOf(address(this), 0);
-        bytes memory result2 = registry.stealthMetaAddressOf(abi.encode(address(this)), 0);
-
-        assertEq(result1, pk);
-        assertEq(result2, pk);
+        bytes memory result = registry.stealthMetaAddressOf(bytes32(uint256(uint160(address(this)))), 0);
+        assertEq(result, pk);
     }
 
     function test_registry_on_behalf() public {
@@ -350,10 +348,30 @@ contract ERC5564Test is Test {
         bytes memory sig = abi.encodePacked(r, s, v); 
         registry.registerKeysOnBehalf(signingAddr, 0, sig, pk);
 
-        bytes memory result3 = registry.getStealthMetaAddressOf(signingAddr, 0);
-        bytes memory result4 = registry.stealthMetaAddressOf(abi.encode(signingAddr), 0);
+        bytes memory result = registry.stealthMetaAddressOf(bytes32(uint256(uint160(signingAddr))), 0);
+        assertEq(result, pk);
+    }
 
-        assertEq(result3, pk);
-        assertEq(result4, pk);
+    function test_registry_resolver() public {
+        bytes memory pk = bytes(hex"03dc2fd7137fe03c1c26a943e07e525518b32ee1818ccd2b6bbae3218b746a06de");
+
+        bytes32 registrant = keccak256(abi.encodePacked(keccak256(abi.encodePacked(bytes32(0), keccak256(bytes("eth")))), keccak256(bytes("ffffffffff"))));
+        /// @dev USING THIS PRIVATE KEY IN PROD WILL MEAN TOTAL LOSS OF FUNDS SINGE ITS LEAKED ON THE WEB
+        uint256 priv = 0x8ad4339a5cf88b5f732b8dadf41e3b4810ceca1791b6c45bd6aff326650018e8;
+
+        bytes memory sig;
+        {
+            uint256 schemeId = 0;
+            (uint8 v, bytes32 r, bytes32 s) = vm.sign(priv, keccak256(abi.encode(registrant, pk, schemeId)));
+            sig = abi.encodePacked(r, s, v);
+        }
+        registry.registerKeysOnBehalfENS(registrant, 0, sig, pk);
+
+        bytes memory result = registry.stealthMetaAddressOf(registrant, 0);
+        assertEq(result, pk);
+
+        bytes32 addrB32 = bytes32(uint256(uint160(vm.addr(priv))));
+        bytes memory resultWrong = registry.stealthMetaAddressOf(addrB32, 0);
+        assertEq(resultWrong, bytes(""));
     }
 }
