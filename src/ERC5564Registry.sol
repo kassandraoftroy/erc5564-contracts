@@ -4,39 +4,40 @@ pragma solidity 0.8.22;
 /// NOTE adaptation of code found here https://eips.ethereum.org/EIPS/eip-6538
 
 import {IERC1271} from "./interfaces/IERC1271.sol";
-import {IENS} from "./interfaces/IENS.sol";
-import {IENSResolver} from "./interfaces/IENSResolver.sol";
+import {EIP712} from "./EIP712.sol";
 
 /// @notice Registry to map an address or other identifier to its stealth meta-address.
-contract ERC5564Registry {
+contract ERC5564Registry is EIP712 {
 
     error InvalidSignature();
     error ZeroAddress();
 
     bytes4 constant internal _MAGICVALUE = 0x1626ba7e;
 
-    IENS immutable public ens;
+    /// @dev to sign typed data correctly offchain (for registerOnBehalf method)
+    /// @dev sign a struct in this exact form with eth_signTypedData:
+    /// struct Registration {
+    ///     uint256 scheme;
+    ///     bytes stealthMetaAddress;
+    /// }
+    bytes32 constant internal _REGISTER_TYPEHASH = keccak256("Registration(uint256 scheme, bytes stealthMetaAddress)");
 
     /// @dev Emitted when a registrant updates their stealth meta-address.
     event StealthMetaAddressSet(
-        bytes32 indexed registrant, uint256 indexed scheme, bytes stealthMetaAddress
+        address indexed registrant, uint256 indexed scheme, bytes stealthMetaAddress
     );
 
-    /// @notice Maps a registrant's identifier to the scheme to the stealth meta-address.
-    /// @dev Registrant may be a 160 bit address, or a 256 bit node hash of an ENS name.
+    /// @notice Maps a registrant to the scheme to the stealth meta-address.
+    /// @dev Registrant MUST be a valid ethereum address.
     /// @dev Scheme is an integer identifier for the stealth address scheme.
     /// @dev MUST return zero if a registrant has not registered keys for the given inputs.
-    mapping(bytes32 => mapping(uint256 => bytes)) public stealthMetaAddressOf;
-
-    constructor(address ens_) {
-        ens = IENS(ens_);
-    }
+    mapping(address => mapping(uint256 => bytes)) public stealthMetaAddressOf;
 
     /// @notice Sets the caller's stealth meta-address for the given stealth address scheme.
     /// @param scheme An integer identifier for the stealth address scheme.
     /// @param stealthMetaAddress The stealth meta-address to register.
     function registerKeys(uint256 scheme, bytes memory stealthMetaAddress) external {
-        stealthMetaAddressOf[bytes32(uint256(uint160(msg.sender)))][scheme] = stealthMetaAddress;
+        stealthMetaAddressOf[msg.sender][scheme] = stealthMetaAddress;
     }
 
     /// @notice Sets the `registrant`s stealth meta-address for the given scheme.
@@ -52,40 +53,10 @@ contract ERC5564Registry {
         bytes memory signature,
         bytes memory stealthMetaAddress
     ) external {
-        bytes32 msghash = keccak256(abi.encode(stealthMetaAddress, scheme));
-
-        _verifySignature(registrant, msghash, signature);
-        
-        stealthMetaAddressOf[bytes32(uint256(uint160(registrant)))][scheme] = stealthMetaAddress;
-    }
-
-    /// @notice Sets the `registrant`s stealth meta-address for the given scheme.
-    /// @param registrant Recipient identifier, in this case an ENS name's 256 bit node hash.
-    /// @param scheme An integer identifier for the stealth address scheme.
-    /// @param signature A signature from the `registrant` authorizing the registration.
-    /// @param stealthMetaAddress The stealth meta-address to register.
-    /// @dev MUST support both EOA signatures and EIP-1271 signatures.
-    /// @dev MUST revert if the signature is invalid.
-    function registerKeysOnBehalfENS(
-        bytes32 registrant,
-        uint256 scheme,
-        bytes memory signature,
-        bytes memory stealthMetaAddress
-    ) external {
-        address addr = IENSResolver(ens.resolver(registrant)).addr(registrant);
-        bytes32 msghash = keccak256(abi.encode(registrant, stealthMetaAddress, scheme));
-
-        _verifySignature(addr, msghash, signature);
-
-        stealthMetaAddressOf[registrant][scheme] = stealthMetaAddress;
-    }
-
-    function _verifySignature(
-        address registrant,
-        bytes32 msghash,
-        bytes memory signature
-    ) internal view {
         if (registrant == address(0)) revert ZeroAddress();
+
+        bytes32 msghash = _hashTypedData(keccak256(abi.encode(_REGISTER_TYPEHASH, scheme, stealthMetaAddress)));
+
         if (registrant.code.length > 0) {
             if (IERC1271(registrant).isValidSignature(msghash, signature) != _MAGICVALUE) revert InvalidSignature();
         } else {
@@ -102,5 +73,7 @@ contract ERC5564Registry {
 
             if (ecrecover(msghash, v, r, s) != registrant) revert InvalidSignature();
         }
+        
+        stealthMetaAddressOf[registrant][scheme] = stealthMetaAddress;
     }
 }
