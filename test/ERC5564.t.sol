@@ -22,7 +22,7 @@ contract ERC5564Test is Test {
     function setUp() public {
         announcer = new ERC5564Announcer();
         transferrer = new ERC5564DirectTransfers(address(announcer), 10**15);
-        registry = new ERC5564Registry(0x00000000000C2E074eC69A0dFb2997BA6C7d2e1e);
+        registry = new ERC5564Registry();
 
         tokenA = new TestERC20(2**200);
         tokenB = new TestERC20(2**200);
@@ -335,7 +335,7 @@ contract ERC5564Test is Test {
         bytes memory pk = bytes(hex"02dc2fd7137fe03c1c26a943e07e525518b32ee1818ccd2b6bbae3218b746a06de");
         registry.registerKeys(0, pk);
 
-        bytes memory result = registry.stealthMetaAddressOf(bytes32(uint256(uint160(address(this)))), 0);
+        bytes memory result = registry.stealthMetaAddressOf(address(this), 0);
         assertEq(result, pk);
     }
 
@@ -344,34 +344,19 @@ contract ERC5564Test is Test {
         uint256 priv = 0xabcdef123456789;
         address signingAddr = vm.addr(priv);
         uint256 schemeId = 0;
-        (uint8 v, bytes32 r, bytes32 s) = vm.sign(priv, keccak256(abi.encode(pk, schemeId)));
+        bytes32 datahash = keccak256(abi.encode(
+            keccak256("Registration(uint256 scheme, bytes stealthMetaAddress)"),
+            schemeId,
+            pk
+        ));
+        bytes32 msghash = keccak256(
+            abi.encodePacked("\x19\x01", registry.DOMAIN_SEPARATOR(), datahash)
+        );
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(priv, msghash);
         bytes memory sig = abi.encodePacked(r, s, v); 
         registry.registerKeysOnBehalf(signingAddr, 0, sig, pk);
 
-        bytes memory result = registry.stealthMetaAddressOf(bytes32(uint256(uint160(signingAddr))), 0);
+        bytes memory result = registry.stealthMetaAddressOf(signingAddr, 0);
         assertEq(result, pk);
-    }
-
-    function test_registry_resolver() public {
-        bytes memory pk = bytes(hex"03dc2fd7137fe03c1c26a943e07e525518b32ee1818ccd2b6bbae3218b746a06de");
-
-        bytes32 registrant = keccak256(abi.encodePacked(keccak256(abi.encodePacked(bytes32(0), keccak256(bytes("eth")))), keccak256(bytes("ffffffffff"))));
-        /// @dev USING THIS PRIVATE KEY IN PROD WILL MEAN TOTAL LOSS OF FUNDS SINGE ITS LEAKED ON THE WEB
-        uint256 priv = 0x8ad4339a5cf88b5f732b8dadf41e3b4810ceca1791b6c45bd6aff326650018e8;
-
-        bytes memory sig;
-        {
-            uint256 schemeId = 0;
-            (uint8 v, bytes32 r, bytes32 s) = vm.sign(priv, keccak256(abi.encode(registrant, pk, schemeId)));
-            sig = abi.encodePacked(r, s, v);
-        }
-        registry.registerKeysOnBehalfENS(registrant, 0, sig, pk);
-
-        bytes memory result = registry.stealthMetaAddressOf(registrant, 0);
-        assertEq(result, pk);
-
-        bytes32 addrB32 = bytes32(uint256(uint160(vm.addr(priv))));
-        bytes memory resultWrong = registry.stealthMetaAddressOf(addrB32, 0);
-        assertEq(resultWrong, bytes(""));
     }
 }

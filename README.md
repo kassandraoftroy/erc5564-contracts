@@ -18,18 +18,6 @@ forge install
 
 ## Test
 
-run
-
 ```
-forge test --fork-url <a sepolia rpc> --fork-block-number 4918128 -vv
+forge test -vv
 ```
-
-## Deployments
-
-Find these contracts deployed on Sepolia Testnet! Test it out!
-
-[ERC5564DirectTransfers](https://sepolia.etherscan.io/address/0xc45ebb31ee56a2515fdc23799a2cc42a375c6e7a#code)
-
-[ERC5564Registry](https://sepolia.etherscan.io/address/0x2ec6dff953f0f21227a02260a7448f8594886280#code)
-
-[ERC5564Announcer](https://sepolia.etherscan.io/address/0x95c9B8972d178f0aE54B19A711708908905dcFc3#code)
