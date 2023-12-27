@@ -28,7 +28,7 @@ contract ERC5564Registry is EIP712 {
     );
 
     /// @notice Maps a registrant to the scheme to the stealth meta-address.
-    /// @dev Registrant MUST be a valid ethereum address.
+    /// @dev Registrant MUST be a valid 160 bit address.
     /// @dev Scheme is an integer identifier for the stealth address scheme.
     /// @dev MUST return zero if a registrant has not registered keys for the given inputs.
     mapping(address => mapping(uint256 => bytes)) public stealthMetaAddressOf;
@@ -41,9 +41,9 @@ contract ERC5564Registry is EIP712 {
     }
 
     /// @notice Sets the `registrant`s stealth meta-address for the given scheme.
-    /// @param registrant Recipient identifier, in this case an ethereum address.
+    /// @param registrant Registrant's address.
     /// @param scheme An integer identifier for the stealth address scheme.
-    /// @param signature A signature from the `registrant` authorizing the registration.
+    /// @param signature A signature from the `registrant` addresss authorizing the registration.
     /// @param stealthMetaAddress The stealth meta-address to register.
     /// @dev MUST support both EOA signatures and EIP-1271 signatures.
     /// @dev MUST revert if the signature is invalid.
