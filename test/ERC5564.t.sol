@@ -19,6 +19,8 @@ contract ERC5564Test is Test {
     TestERC721 public nft;
     ERC5564Registry public registry;
 
+    error InvalidSignature();
+
     function setUp() public {
         announcer = new ERC5564Announcer();
         transferrer = new ERC5564DirectTransfers(address(announcer), 10**15);
@@ -342,21 +344,65 @@ contract ERC5564Test is Test {
     function test_registry_on_behalf() public {
         bytes memory pk = bytes(hex"03dc2fd7137fe03c1c26a943e07e525518b32ee1818ccd2b6bbae3218b746a06de");
         uint256 priv = 0xabcdef123456789;
-        address signingAddr = vm.addr(priv);
-        uint256 schemeId = 0;
         bytes32 datahash = keccak256(abi.encode(
-            keccak256("Registration(uint256 scheme, bytes stealthMetaAddress)"),
-            schemeId,
-            pk
+            keccak256("Registration(address registrant,uint256 scheme,bytes stealthMetaAddress,uint256 nonce)"),
+            vm.addr(priv),
+            0,
+            pk,
+            1
         ));
         bytes32 msghash = keccak256(
             abi.encodePacked("\x19\x01", registry.DOMAIN_SEPARATOR(), datahash)
         );
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(priv, msghash);
-        bytes memory sig = abi.encodePacked(r, s, v); 
-        registry.registerKeysOnBehalf(signingAddr, 0, sig, pk);
+        bytes memory sig = abi.encodePacked(r, s, v);
+        {
+            registry.registerKeysOnBehalf(vm.addr(priv), 0, sig, pk);
 
-        bytes memory result = registry.stealthMetaAddressOf(signingAddr, 0);
-        assertEq(result, pk);
+            bytes memory result = registry.stealthMetaAddressOf(vm.addr(priv), 0);
+            assertEq(result, pk);
+
+            uint256 nonceCheck = registry.nonceOf(vm.addr(priv));
+            assertEq(nonceCheck, 1);
+        }
+
+        bytes memory pk2 = bytes(hex"02dc2fd7137fe03c1c26a943e07e525518b32ee1818ccd2b6bbae3218b746a06de");
+        datahash = keccak256(abi.encode(
+            keccak256("Registration(address registrant,uint256 scheme,bytes stealthMetaAddress,uint256 nonce)"),
+            vm.addr(priv),
+            0,
+            pk2,
+            2
+        ));
+        msghash = keccak256(
+            abi.encodePacked("\x19\x01", registry.DOMAIN_SEPARATOR(), datahash)
+        );
+        (v, r, s) = vm.sign(priv, msghash);
+        bytes memory sig2 = abi.encodePacked(r, s, v);
+
+        datahash = keccak256(abi.encode(
+            keccak256("Registration(address registrant,uint256 scheme,bytes stealthMetaAddress,uint256 nonce)"),
+            vm.addr(priv),
+            0,
+            pk,
+            3
+        ));
+        msghash = keccak256(
+            abi.encodePacked("\x19\x01", registry.DOMAIN_SEPARATOR(), datahash)
+        );
+        (v, r, s) = vm.sign(priv, msghash);
+        bytes memory sig3 = abi.encodePacked(r, s, v);
+
+        vm.expectRevert(InvalidSignature.selector);
+        registry.registerKeysOnBehalf(vm.addr(priv), 0, sig, pk);
+
+        vm.expectRevert(InvalidSignature.selector);
+        registry.registerKeysOnBehalf(vm.addr(priv), 0, sig3, pk);
+
+        registry.registerKeysOnBehalf(vm.addr(priv), 0, sig2, pk2);
+
+        assertEq(registry.stealthMetaAddressOf(vm.addr(priv), 0), pk2);
+
+        assertEq(registry.nonceOf(vm.addr(priv)), 2);
     }
 }
