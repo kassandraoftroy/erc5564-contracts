@@ -22,7 +22,8 @@ contract ERC5564Registry is EIP712 {
     ///     bytes stealthMetaAddress;
     ///     uint256 nonce;
     /// }
-    bytes32 constant internal _REGISTER_TYPEHASH = keccak256("Registration(address registrant,uint256 scheme,bytes stealthMetaAddress,uint256 nonce)");
+    /// @dev where nonce signed MUST be nonceOf[registrant]++ (the current value of registrant's nonce incremented by 1)
+    bytes32 constant internal _REGISTRATION_TYPEHASH = keccak256("Registration(address registrant,uint256 scheme,bytes stealthMetaAddress,uint256 nonce)");
 
     /// @dev Emitted when a registrant updates their stealth meta-address.
     event StealthMetaAddressSet(
@@ -60,7 +61,7 @@ contract ERC5564Registry is EIP712 {
     ) external {
         if (registrant == address(0)) revert ZeroAddress();
 
-        bytes32 msghash = _hashTypedData(keccak256(abi.encode(_REGISTER_TYPEHASH, registrant, scheme, stealthMetaAddress, ++nonceOf[registrant])));
+        bytes32 msghash = _hashTypedData(keccak256(abi.encode(_REGISTRATION_TYPEHASH, registrant, scheme, stealthMetaAddress, ++nonceOf[registrant])));
 
         if (registrant.code.length > 0) {
             if (IERC1271(registrant).isValidSignature(msghash, signature) != _MAGICVALUE) revert InvalidSignature();
