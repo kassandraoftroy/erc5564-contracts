@@ -17,10 +17,12 @@ contract ERC5564Registry is EIP712 {
     /// @dev to sign typed data correctly offchain (for registerOnBehalf method)
     /// @dev sign a struct in this exact form with eth_signTypedData:
     /// struct Registration {
+    ///     address registrant;
     ///     uint256 scheme;
     ///     bytes stealthMetaAddress;
+    ///     uint256 nonce;
     /// }
-    bytes32 constant internal _REGISTER_TYPEHASH = keccak256("Registration(uint256 scheme, bytes stealthMetaAddress)");
+    bytes32 constant internal _REGISTER_TYPEHASH = keccak256("Registration(address registrant,uint256 scheme,bytes stealthMetaAddress,uint256 nonce)");
 
     /// @dev Emitted when a registrant updates their stealth meta-address.
     event StealthMetaAddressSet(
@@ -32,6 +34,9 @@ contract ERC5564Registry is EIP712 {
     /// @dev Scheme is an integer identifier for the stealth address scheme.
     /// @dev MUST return zero if a registrant has not registered keys for the given inputs.
     mapping(address => mapping(uint256 => bytes)) public stealthMetaAddressOf;
+
+    /// @notice tracks registrant nonce for replay attacks of registerOnBehalfOf
+    mapping(address => uint256) public nonceOf;
 
     /// @notice Sets the caller's stealth meta-address for the given stealth address scheme.
     /// @param scheme An integer identifier for the stealth address scheme.
@@ -55,7 +60,7 @@ contract ERC5564Registry is EIP712 {
     ) external {
         if (registrant == address(0)) revert ZeroAddress();
 
-        bytes32 msghash = _hashTypedData(keccak256(abi.encode(_REGISTER_TYPEHASH, scheme, stealthMetaAddress)));
+        bytes32 msghash = _hashTypedData(keccak256(abi.encode(_REGISTER_TYPEHASH, registrant, scheme, stealthMetaAddress, ++nonceOf[registrant])));
 
         if (registrant.code.length > 0) {
             if (IERC1271(registrant).isValidSignature(msghash, signature) != _MAGICVALUE) revert InvalidSignature();
