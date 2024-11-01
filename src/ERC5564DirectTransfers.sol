@@ -24,6 +24,7 @@ contract ERC5564DirectTransfers {
     // note can be set to 0 in constructor to ignore this functionality
     uint256 public immutable minimumTransfer;
 
+    /// @NOTE: NOT SURE WE WANT/NEED THIS EVENT
     event StealthTransferDirect(
         address indexed caller,
         uint256 indexed nativeValue,
@@ -45,7 +46,7 @@ contract ERC5564DirectTransfers {
     /// @param tokens array of ERC20/ERC721 addresses to transferFrom msg.sender to stealthAddress
     /// @param values amount of ERC20 or tokenId of ERC721 to transferFrom msg.sender to stealthAddress
     /// @dev caller must forward enough msg.value if minimumTransfer > 0
-    /// caller must allso approve `values[i]` for each `tokens[i]` contract before invoking this function
+    /// caller must also approve `values[i]` for each `tokens[i]` contract before invoking this function
     /// note this function will properly encode metadata on your behalf compying with ERC5564 suggestions
     function stealthTransfer(
         uint256 schemeId,
@@ -127,6 +128,7 @@ contract ERC5564DirectTransfers {
             if (!success) revert NativeTransferFailed();
         }
 
+        // @NOTE: do we need / want this event ???
         emit StealthTransferDirect(msgsender, msgvalue, tokens, values);
 
         announcer.announce(

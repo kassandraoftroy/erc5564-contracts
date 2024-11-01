@@ -11,7 +11,7 @@ import {TestERC721} from "./utils/TestERC721.sol";
 
 // solhint-disable func-name-mixedcase
 
-contract ERC5564Test is Test {
+contract ERC5564DirectTransfersTest is Test {
     ERC5564Announcer public announcer;
     ERC5564DirectTransfers public transferrer;
     TestERC20 public tokenA;
