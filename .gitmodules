@@ -4,3 +4,6 @@
 [submodule "lib/solady"]
 	path = lib/solady
 	url = https://github.com/vectorized/solady
+[submodule "lib/stealth-address-erc-contracts"]
+	path = lib/stealth-address-erc-contracts
+	url = https://github.com/ScopeLift/stealth-address-erc-contracts
