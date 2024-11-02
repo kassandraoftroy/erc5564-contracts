@@ -24,12 +24,9 @@ contract ERC5564DirectTransfers {
     // note can be set to 0 in constructor to ignore this functionality
     uint256 public immutable minimumTransfer;
 
-    /// @NOTE: NOT SURE WE WANT/NEED THIS EVENT
     event StealthTransferDirect(
         address indexed caller,
-        uint256 indexed nativeValue,
-        address[] indexed tokens,
-        uint256[] tokenValues
+        uint256 indexed nativeValue
     );
 
     constructor(address _announcer, uint256 _minimumTransfer) {
@@ -128,11 +125,10 @@ contract ERC5564DirectTransfers {
             if (!success) revert NativeTransferFailed();
         }
 
-        // @NOTE: do we need / want this event ???
-        emit StealthTransferDirect(msgsender, msgvalue, tokens, values);
+        emit StealthTransferDirect(msgsender, msgvalue);
 
         announcer.announce(
-            schemeId, 
+            schemeId,
             stealthAddress, 
             ephemeralPubkey, 
             metadata
