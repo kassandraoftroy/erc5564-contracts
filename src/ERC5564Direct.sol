@@ -6,7 +6,7 @@ import {ITransferFrom} from "./interfaces/ITransferFrom.sol";
 
 /// @notice contract for directly transferring assets (potentially in a batch) to a stealth address
 /// and announcing the stealth address data to the chain's canonical ERC5564 announcer
-contract ERC5564DirectTransfers {
+contract ERC5564Direct {
 
     error MalformattedMetadata();
     error InsufficientMsgValue();
@@ -26,9 +26,7 @@ contract ERC5564DirectTransfers {
 
     event StealthTransferDirect(
         address indexed caller,
-        uint256 indexed nativeValue,
-        address[] indexed tokens,
-        uint256[] tokenValues
+        uint256 indexed nativeValue
     );
 
     constructor(address _announcer, uint256 _minimumTransfer) {
@@ -45,7 +43,7 @@ contract ERC5564DirectTransfers {
     /// @param tokens array of ERC20/ERC721 addresses to transferFrom msg.sender to stealthAddress
     /// @param values amount of ERC20 or tokenId of ERC721 to transferFrom msg.sender to stealthAddress
     /// @dev caller must forward enough msg.value if minimumTransfer > 0
-    /// caller must allso approve `values[i]` for each `tokens[i]` contract before invoking this function
+    /// caller must also approve `values[i]` for each `tokens[i]` contract before invoking this function
     /// note this function will properly encode metadata on your behalf compying with ERC5564 suggestions
     function stealthTransfer(
         uint256 schemeId,
@@ -127,10 +125,10 @@ contract ERC5564DirectTransfers {
             if (!success) revert NativeTransferFailed();
         }
 
-        emit StealthTransferDirect(msgsender, msgvalue, tokens, values);
+        emit StealthTransferDirect(msgsender, msgvalue);
 
         announcer.announce(
-            schemeId, 
+            schemeId,
             stealthAddress, 
             ephemeralPubkey, 
             metadata
