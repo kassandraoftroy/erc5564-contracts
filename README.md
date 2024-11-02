@@ -28,6 +28,8 @@ forge install
 
 ## Test
 
+NOTE: fill in `.env` see `.env.example` before running tests
+
 ```
 forge test -vv
 ```
