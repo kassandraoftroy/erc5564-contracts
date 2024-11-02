@@ -6,7 +6,7 @@ import {ITransferFrom} from "./interfaces/ITransferFrom.sol";
 
 /// @notice contract for directly transferring assets (potentially in a batch) to a stealth address
 /// and announcing the stealth address data to the chain's canonical ERC5564 announcer
-contract ERC5564DirectTransfers {
+contract ERC5564Direct {
 
     error MalformattedMetadata();
     error InsufficientMsgValue();

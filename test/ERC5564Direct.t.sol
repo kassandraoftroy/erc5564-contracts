@@ -3,13 +3,13 @@ pragma solidity 0.8.22;
 
 import {console2} from "forge-std/Test.sol";
 import {Vm} from "forge-std/Vm.sol";
-import {ERC5564DirectTransfers} from "../src/ERC5564DirectTransfers.sol";
+import {ERC5564Direct} from "../src/ERC5564Direct.sol";
 import {IERC20} from "./utils/IERC20.sol";
 import {IERC721} from "./utils/IERC721.sol";
 import {TestWrapper} from "./TestWrapper.sol";
 
 // solhint-disable func-name-mixedcase
-contract ERC5564DirectTransfersTest is TestWrapper {
+contract ERC5564DirectTest is TestWrapper {
     address public announcer = 0x55649E01B5Df198D18D95b5cc5051630cfD45564;
     address public tokenA = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2;
     address public tokenB = 0x6B175474E89094C44Da98b954EedeAC495271d0F;
@@ -18,12 +18,12 @@ contract ERC5564DirectTransfersTest is TestWrapper {
     address public miladyHolder = 0x398d282487b44b6e53Ce0AebcA3CB60C3B6325E9;
     address public wethHolder = 0x741AA7CFB2c7bF2A1E7D4dA2e3Df6a56cA4131F3;
     address public daiHolder = 0xD1668fB5F690C59Ab4B0CAbAd0f8C1617895052B;
-    ERC5564DirectTransfers public transferrer;
+    ERC5564Direct public transferrer;
 
     error InvalidSignature();
 
     function setUp() public {
-        transferrer = new ERC5564DirectTransfers(address(announcer), 10**15);
+        transferrer = new ERC5564Direct(address(announcer), 10**15);
         
         vm.prank(miladyHolder);
         IERC721(nft).transferFrom(miladyHolder, address(this), 4617);
@@ -76,7 +76,7 @@ contract ERC5564DirectTransfersTest is TestWrapper {
             nums
         );
 
-        vm.expectRevert(ERC5564DirectTransfers.InsufficientMsgValue.selector);
+        vm.expectRevert(ERC5564Direct.InsufficientMsgValue.selector);
         transferrer.stealthTransfer{value: 10**15-1}(
             0,
             0xBbC640bD5FcbCBe3bb7D6570A2bd94E2d7441BB1,
@@ -90,7 +90,7 @@ contract ERC5564DirectTransfersTest is TestWrapper {
         nums[0] = 1000;
         nums[1] = 1 ether;
         
-        vm.expectRevert(ERC5564DirectTransfers.ArrayLengthMismatch.selector);
+        vm.expectRevert(ERC5564Direct.ArrayLengthMismatch.selector);
         transferrer.stealthTransfer{value: 10**15}(
             0,
             0xBbC640bD5FcbCBe3bb7D6570A2bd94E2d7441BB1,
@@ -166,7 +166,7 @@ contract ERC5564DirectTransfersTest is TestWrapper {
     }
 
     function test_noMinTransfer() public {
-        ERC5564DirectTransfers noRateLimit = new ERC5564DirectTransfers(address(announcer), 0);
+        ERC5564Direct noRateLimit = new ERC5564Direct(address(announcer), 0);
         address[] memory x;
         uint256[] memory y;
         noRateLimit.stealthTransfer{value: 1 ether}(
