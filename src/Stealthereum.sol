@@ -86,7 +86,7 @@ contract Stealthereum is IStealthereum {
 
     function parseMetadata(
         bytes memory metadata
-    ) external pure returns (uint256 valueETH, address[] memory tokens, uint256[] memory values, bytes memory extraMetadata) {
+    ) external pure returns (uint256 valueETH, address[] memory tokens, uint256[] memory values, uint256 extraDataLen) {
         uint256 len = metadata.length;
         if (len < 57) revert MalformattedMetadata();
         
@@ -141,20 +141,8 @@ contract Stealthereum is IStealthereum {
             }
         }
 
-        uint256 start = sendsETH ? 1+(arrayLen+1)*56 : 1+arrayLen*56;
-        uint256 length = metadata.length-start;
-
-        bytes memory result = new bytes(length);
-        assembly {
-            // Get the pointer to the start of the data in `data`
-            let dataPtr := add(metadata, 0x20)
-            // Calculate the pointer for `result`
-            let resultPtr := add(result, 0x20)
-            // Copy the desired segment from `data` to `result`
-            calldatacopy(resultPtr, add(dataPtr, start), length)
-        }
-
-        extraMetadata = result;
+        uint256 start = sendsETH ? 57+arrayLen*56 : 1+arrayLen*56;
+        extraDataLen = metadata.length - start;
     }
 
     function getMetadata(
