@@ -32,20 +32,12 @@ interface IStealthereum {
         uint256[] calldata msgvalues
     ) external payable;
 
-    function dispatchAnnouncement(
-        StealthTransfer calldata transferData,
-        uint256 msgvalue
-    ) external;
-
-    function batchDispatchAnnouncements(
-        StealthTransfer[] calldata transfersData,
-        uint256[] calldata msgvalues
-    ) external;
-
     /// @notice parse metadata to check for valid formatting and what transfers it encodes
-    /// @param msgvalue the expected amount of native token transfer encoded in the metadata
     /// @param metadata the bytes of metadata to parse
-    /// @return tokens and values (amounts/tokenIds) of each token to transfer (besides native token)
+    /// @return valueETH amount of native ETH transferred
+    /// @return tokens list of token transfers
+    /// @return values values transferred in token transfers
+    /// @return extraMetadata custom extra metadata
     /// @dev the first n*56+1 bytes of metadata MUST conform to the following format (where `n` is number of native or token transfers)
     /// first byte MUST be a view tag (if no view tag, can be any arbitrary byte but should be 0x00)
     /// IF forwarding the native token (e.g. ETH) next 56 bytes MUST be 24 bytes of 0xee + 32 byte uint matching msg.value
@@ -53,9 +45,8 @@ interface IStealthereum {
     /// these "token transfer" 56 byte chunks go 0x23b872dd + 20 byte token address + 32 byte uint of amount/tokenId to transfer
     /// Once the start of a 56 byte chunk does not start with 0x23b872dd, we consider this unstructured appended data
     function parseMetadata(
-        uint256 msgvalue,
         bytes memory metadata
-    ) external pure returns (address[] memory tokens, uint256[] memory values);
+    ) external pure returns (uint256 valueETH, address[] memory tokens, uint256[] memory values, bytes memory extraMetadata);
 
     function getMetadata(
         uint256 msgvalue,

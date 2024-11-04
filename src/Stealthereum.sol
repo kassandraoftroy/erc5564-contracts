@@ -85,31 +85,30 @@ contract Stealthereum is IStealthereum {
     }
 
     function parseMetadata(
-        uint256 msgvalue,
         bytes memory metadata
-    ) external pure returns (address[] memory tokens, uint256[] memory values) {
+    ) external pure returns (uint256 valueETH, address[] memory tokens, uint256[] memory values, bytes memory extraMetadata) {
         uint256 len = metadata.length;
         if (len < 57) revert MalformattedMetadata();
         
-        bool sendsEth = msgvalue > 0;
-        if (sendsEth) {
-            uint256 amountCheck;
-            bytes32 prefixCheck;
+        bytes32 checkSelector;
+        assembly {
+            checkSelector := shl(0x40, shr(0x40, mload(add(metadata, 0x21))))
+        }
+
+        bool sendsETH = checkSelector == _ETH_AND_SELECTOR;
+        if (sendsETH) {
             assembly {
-                amountCheck := mload(add(metadata, 0x39))
-                prefixCheck := shl(0x40, shr(0x40, mload(add(metadata, 0x21))))
+                valueETH := mload(add(metadata, 0x39))
             }
-            if (msgvalue != amountCheck || _ETH_AND_SELECTOR != prefixCheck)
-                revert MalformattedMetadata();
         }
 
         uint256 n = (len - 1)/56;
-        if (n > 1 || !sendsEth) {
+        uint256 arrayLen;
+        if (n > 1 || !sendsETH) {
             assembly {
-                let arrayLen := 0x00
                 let startPtr := add(metadata, 0x59)
                 let max := sub(n, 0x01)
-                if iszero(sendsEth) {
+                if iszero(sendsETH) {
                     max := n
                     startPtr := add(metadata, 0x21)
                 }
@@ -142,51 +141,20 @@ contract Stealthereum is IStealthereum {
             }
         }
 
-        if (!sendsEth && tokens.length == 0) revert MalformattedMetadata();
-    }
+        uint256 start = sendsETH ? 1+(arrayLen+1)*56 : 1+arrayLen*56;
+        uint256 length = metadata.length-start;
 
-    function dispatchAnnouncement(
-        StealthTransfer calldata transferData,
-        uint256 msgvalue
-    ) external {
-        bytes memory metadata = getMetadata(
-            msgvalue,
-            transferData.viewTag,
-            transferData.tokens,
-            transferData.values,
-            transferData.extraMetadata
-        );
-
-        announcer.announce(
-            transferData.schemeId,
-            transferData.stealthAddress, 
-            transferData.ephemeralPubkey, 
-            metadata
-        );
-    }
-
-    function batchDispatchAnnouncements(
-        StealthTransfer[] calldata transfersData,
-        uint256[] calldata msgvalues
-    ) external {
-        uint256 len = transfersData.length;
-        if (msgvalues.length != len) revert ArrayLengthMismatch();
-        for (uint256 i; i < len; i++) {
-            bytes memory metadata = getMetadata(
-                msgvalues[i],
-                transfersData[i].viewTag,
-                transfersData[i].tokens,
-                transfersData[i].values,
-                transfersData[i].extraMetadata
-            );
-
-            announcer.announce(
-                transfersData[i].schemeId,
-                transfersData[i].stealthAddress, 
-                transfersData[i].ephemeralPubkey, 
-                metadata
-            );
+        bytes memory result = new bytes(length);
+        assembly {
+            // Get the pointer to the start of the data in `data`
+            let dataPtr := add(metadata, 0x20)
+            // Calculate the pointer for `result`
+            let resultPtr := add(result, 0x20)
+            // Copy the desired segment from `data` to `result`
+            calldatacopy(resultPtr, add(dataPtr, start), length)
         }
+
+        extraMetadata = result;
     }
 
     function getMetadata(
@@ -199,15 +167,15 @@ contract Stealthereum is IStealthereum {
         uint256 len = tokens.length;
         if (len != values.length) revert ArrayLengthMismatch();
 
-        bool sendsEth = msgvalue > 0;
-        uint256 metadataLen = sendsEth ? 56*(len+1)+1 : 56*len+1;
+        bool sendsETH = msgvalue > 0;
+        uint256 metadataLen = sendsETH ? 56*(len+1)+1 : 56*len+1;
         bytes memory metadata = new bytes(metadataLen);
 
         assembly {
             let startPtr := add(metadata, 0x21)
             let n := div(sub(metadataLen, 0x01), 0x38)
             mstore8(add(metadata, 0x20), viewTag)
-            if gt(sendsEth, 0) {
+            if gt(sendsETH, 0) {
                 mstore(add(metadata, 0x21), _ETH_AND_SELECTOR)
                 mstore(add(metadata, 0x39), msgvalue)
 
