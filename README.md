@@ -1,22 +1,22 @@
 # ERC5564 Contracts
 
-ERC5564 contracts for stealth addresses on evm chains are finally here!
+ERC5564 is the core EIP defining the stealth addresses standards for ethereum.
 
 ## Core Contracts
 
-The canonical contracts for ERC5564 compliant stealth-address schemes are deployed to mainnets.
+**UPDATE:** This repo no longer implements a clone of ERC5564 and ERC6538 core contracts. Now that the canonical implementations have been audited and deployed. [Find official implementation and deployments here](https://github.com/ScopeLift/stealth-address-erc-contracts)
 
-`ERC5564Announcer` - The canonical, shared, announcer contract that announces a stealth address payment
+`ERC5564Announcer.sol` - The canonical, shared, announcer contract that announces a stealth address payment. [source code](https://github.com/ScopeLift/stealth-address-erc-contracts/blob/main/src/ERC5564Announcer.sol)
 
-`ERC5564Registry` - Optional (opt-in) registry to register a stealth meta address
+`ERC5564Registry.sol` - Optional (opt-in) registry to register a stealth meta address. [source code](https://github.com/ScopeLift/stealth-address-erc-contracts/blob/main/src/ERC6538Registry.sol)
 
-See official implementation and deployments [here](https://github.com/ScopeLift/stealth-address-erc-contracts)
+## Stealthereum
 
-## ERC5564Direct
+This repo is an example integration with the core ERC contracts. It implements a set of patterns and an extended schema for metadata on announcements.
 
-This repo is an example integration with the core contracts. It contains:
+`Stealthereum.sol` - Transfer any ERC20 or ERC721 directly to a stealth address and announce it. Has convenience methods for parsing and creating metadata to attach to announcements.
 
-`ERC5564Direct` - Transfer any ERC20 or ERC721 directly to a stealth address and announce it. Uses an extended metatdata schema and has convenience methods for parsing and creating metadata to attach to announcements. Uses a minimum native Transfer amount as rate-limiter and to ensure owners have funds to pay gas and sweep/claim tokens from the stealth addresses later.
+`StealthSwapHelper.sol` - First swap tokens (or ETH) for an ERC20 token, then forward the resulting tokens to a stealth address of your choosing (and announce it).
 
 NOT AUDITED - HOMEROLLED CRYPTO - USE AT YOUR OWN RISK
 
