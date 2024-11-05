@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.22;
 
-import {ITransferFrom} from "./interfaces/ITransferFrom.sol";
+import {IToken} from "./interfaces/IToken.sol";
 import {
     IStealthSwapHelper,
     IStealthereum
@@ -30,15 +30,15 @@ contract StealthSwapHelper is IStealthSwapHelper {
             if (swap.inputAmount + swap.nativeTransfer != msg.value) revert WrongMsgValue();
             value = swap.inputAmount;
         } else {
-            ITransferFrom(swap.inputToken).transferFrom(msg.sender, address(this), swap.inputAmount);
+            IToken(swap.inputToken).transferFrom(msg.sender, address(this), swap.inputAmount);
         }
 
-        uint256 outputTokenBefore = ITransferFrom(swap.outputToken).balanceOf(address(this));
+        uint256 outputTokenBefore = IToken(swap.outputToken).balanceOf(address(this));
         
         (bool success,) = swap.swapRouter.call{value: value}(swap.swapPayload);
         if (!success) revert SwapCallFailed();
 
-        uint256 outputAmount = ITransferFrom(swap.outputToken).balanceOf(address(this)) - outputTokenBefore;
+        uint256 outputAmount = IToken(swap.outputToken).balanceOf(address(this)) - outputTokenBefore;
         if (outputAmount == 0) revert NoSwapOutput();
 
         address[] memory tokens = new address[](1);
@@ -69,22 +69,22 @@ contract StealthSwapHelper is IStealthSwapHelper {
             if (swap.inputAmount + swap.nativeTransfer + transferValueETH != msg.value) revert WrongMsgValue();
             swapValue = swap.inputAmount;
         } else {
-            ITransferFrom(swap.inputToken).transferFrom(msg.sender, address(this), swap.inputAmount);
+            IToken(swap.inputToken).transferFrom(msg.sender, address(this), swap.inputAmount);
         }
 
-        uint256 outputTokenBefore = ITransferFrom(swap.outputToken).balanceOf(address(this));
+        uint256 outputTokenBefore = IToken(swap.outputToken).balanceOf(address(this));
         
         (bool success,) = swap.swapRouter.call{value: swapValue}(swap.swapPayload);
         if (!success) revert SwapCallFailed();
 
-        uint256 outputAmount = ITransferFrom(swap.outputToken).balanceOf(address(this)) - outputTokenBefore;
+        uint256 outputAmount = IToken(swap.outputToken).balanceOf(address(this)) - outputTokenBefore;
         if (outputAmount == 0) revert NoSwapOutput();
 
         for (uint256 i = 0; i < transferData.tokens.length; i++) {
             address token = transferData.tokens[i];
             uint256 v = transferData.values[i];
-            ITransferFrom(token).transferFrom(msg.sender, v);
-            ITransferFrom(token).approve(address(stealthereum), v);
+            IToken(token).transferFrom(msg.sender, address(this), v);
+            IToken(token).approve(address(stealthereum), v);
         }
 
         address[] memory tokens = new address[](1);
@@ -108,7 +108,7 @@ contract StealthSwapHelper is IStealthSwapHelper {
         msgvalues[0] = swap.nativeTransfer;
         msgvalues[1] = transferValueETH;
 
-        ITransferFrom(swap.outputToken).approve(address(stealtereum), outputAmount);
+        IToken(swap.outputToken).approve(address(stealthereum), outputAmount);
 
         stealthereum.batchStealthTransfers{value: swap.nativeTransfer+transferValueETH}(
             transfersData,

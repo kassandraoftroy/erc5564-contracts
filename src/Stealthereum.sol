@@ -2,7 +2,7 @@
 pragma solidity 0.8.22;
 
 import {IERC5564Announcer} from "./interfaces/IERC5564Announcer.sol";
-import {ITransferFrom} from "./interfaces/ITransferFrom.sol";
+import {IToken} from "./interfaces/IToken.sol";
 import {IStealthereum} from "./interfaces/IStealthereum.sol";
 
 /// @notice stealth.ereum is a ERC5564 compliant stealth addresses integration with a convenient metadata standard
@@ -191,7 +191,7 @@ contract Stealthereum is IStealthereum {
         uint256[] memory values
     ) internal {
         for (uint256 i = 0; i < tokens.length; i++) {
-            ITransferFrom(tokens[i]).transferFrom(msgsender, stealthAddress, values[i]);
+            IToken(tokens[i]).transferFrom(msgsender, stealthAddress, values[i]);
         }
 
         if (msgvalue > 0) {
