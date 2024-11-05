@@ -125,7 +125,7 @@ contract StealthereumTest is TestWrapper {
         uint256[] memory values = new uint256[](2);
         values[0] = 10 ether;
         values[1] = 100 ether;
-        bytes memory extraCheck = bytes("IAMEXTRA");
+        bytes memory extraCheck = bytes("IAMEXTRADATA");
         bytes memory metadata = transferrer.getMetadata(
             1 ether,
             234,

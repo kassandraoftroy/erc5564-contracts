@@ -7,6 +7,8 @@ import {
     IStealthereum
 } from "./interfaces/IStealthSwapHelper.sol";
 
+import {console2} from "forge-std/Test.sol";
+
 contract StealthSwapHelper is IStealthSwapHelper {
 
     error ArrayLengthMismatch();
@@ -31,20 +33,21 @@ contract StealthSwapHelper is IStealthSwapHelper {
             value = swap.inputAmount;
         } else {
             IToken(swap.inputToken).transferFrom(msg.sender, address(this), swap.inputAmount);
+            IToken(swap.inputToken).approve(swap.swapRouter, swap.inputAmount);
         }
-
-        uint256 outputTokenBefore = IToken(swap.outputToken).balanceOf(address(this));
         
         (bool success,) = swap.swapRouter.call{value: value}(swap.swapPayload);
         if (!success) revert SwapCallFailed();
 
-        uint256 outputAmount = IToken(swap.outputToken).balanceOf(address(this)) - outputTokenBefore;
+        uint256 outputAmount = IToken(swap.outputToken).balanceOf(address(this));
         if (outputAmount == 0) revert NoSwapOutput();
 
         address[] memory tokens = new address[](1);
         tokens[0] = swap.outputToken;
         uint256[] memory values = new uint256[](1);
         values[0] = outputAmount;
+
+        IToken(swap.outputToken).approve(address(stealthereum), outputAmount);
 
         stealthereum.stealthTransfer{value: swap.nativeTransfer}(
             IStealthereum.StealthTransfer({
@@ -70,14 +73,13 @@ contract StealthSwapHelper is IStealthSwapHelper {
             swapValue = swap.inputAmount;
         } else {
             IToken(swap.inputToken).transferFrom(msg.sender, address(this), swap.inputAmount);
+            IToken(swap.inputToken).approve(swap.swapRouter, swap.inputAmount);
         }
-
-        uint256 outputTokenBefore = IToken(swap.outputToken).balanceOf(address(this));
         
         (bool success,) = swap.swapRouter.call{value: swapValue}(swap.swapPayload);
         if (!success) revert SwapCallFailed();
 
-        uint256 outputAmount = IToken(swap.outputToken).balanceOf(address(this)) - outputTokenBefore;
+        uint256 outputAmount = IToken(swap.outputToken).balanceOf(address(this));
         if (outputAmount == 0) revert NoSwapOutput();
 
         for (uint256 i = 0; i < transferData.tokens.length; i++) {
