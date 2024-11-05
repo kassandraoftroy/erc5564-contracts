@@ -79,6 +79,7 @@ contract StealthSwapTest is TestWrapper {
         address secondReceiver = 0x454f193FD7AD2a395Bb54711DF5Ec4662A8E34C1;
         bytes memory swapPayload = abi.encodeWithSelector(IRouter.swapExactETHForTokens.selector, 0, path, address(helper), 999999999999);
 
+        vm.prank(firstReceiver);
         helper.stealthSwap{value: 0.91 ether}(
             IStealthSwapHelper.StealthSwap({
                 schemeId: 1,
@@ -94,5 +95,87 @@ contract StealthSwapTest is TestWrapper {
                 nativeTransfer: 0.01 ether
             })
         );
+
+        assertEq(firstReceiver.balance, 10**19 - 0.91 ether);
+        assertGt(IERC20(dai).balanceOf(secondReceiver), 0);
+        assertEq(secondReceiver.balance, 0.01 ether);
+    }
+
+    function test_stealthSwapAndBatch() public {
+        address firstReceiver = 0xBbC640bD5FcbCBe3bb7D6570A2bd94E2d7441BB1;
+        address[] memory addys = new address[](2);
+        addys[0] = nft;
+        addys[1] = weth;
+        uint256[] memory nums = new uint256[](2);
+        nums[0] = 4617;
+        nums[1] = 10 ether;
+
+        assertEq(IERC721(nft).ownerOf(4617), address(this));
+        
+        IERC721(nft).approve(address(transferrer), 4617);
+        IERC20(weth).approve(address(transferrer), 10 ether);
+
+        transferrer.stealthTransfer{value: 10**19}(
+            IStealthereum.StealthTransfer({
+                schemeId: 1,
+                stealthAddress: firstReceiver,
+                ephemeralPubkey: bytes(hex"02dc2fd7137fe03c1c26a943e07e525518b32ee1818ccd2b6bbae3218b746a06de"),
+                viewTag: 196,
+                tokens: addys,
+                values: nums,
+                extraMetadata: bytes("")
+            })
+        );
+
+        assertEq(IERC721(nft).ownerOf(4617), firstReceiver);
+        assertEq(firstReceiver.balance, 10**19);
+        assertEq(IERC20(weth).balanceOf(firstReceiver), 10 ether);
+
+        address[] memory path = new address[](2);
+        path[0] = weth;
+        path[1] = dai;
+
+        address secondReceiver = 0x454f193FD7AD2a395Bb54711DF5Ec4662A8E34C1;
+        address thirdReceiver = 0x454F193fd7aD2A395bB54711dF5EC4662A8e34CA;
+        bytes memory swapPayload = abi.encodeWithSelector(IRouter.swapExactETHForTokens.selector, 0, path, address(helper), 999999999999);
+
+        vm.prank(firstReceiver);
+        IERC721(nft).approve(address(helper), 4617);
+        vm.prank(firstReceiver);
+        IERC20(weth).approve(address(helper), 10 ether);
+
+        vm.prank(firstReceiver);
+        helper.stealthSwapAndBatch{value: 0.61 ether}(
+            IStealthSwapHelper.StealthSwap({
+                schemeId: 1,
+                stealthAddress: secondReceiver,
+                ephemeralPubkey: bytes(hex"02dc2fd7137fe03c1c26a943e07e525518b32ee1818ccd2b6bbae3218b746a06de"),
+                viewTag: 196,
+                extraMetadata: bytes(""),
+                inputToken: 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE,
+                inputAmount: 0.5 ether,
+                outputToken: dai,
+                swapRouter: uniV2Router,
+                swapPayload: swapPayload,
+                nativeTransfer: 0.01 ether
+            }),
+            IStealthereum.StealthTransfer({
+                schemeId: 1,
+                stealthAddress: thirdReceiver,
+                ephemeralPubkey: bytes(hex"02dc2fd7137fe03c1c26a943e07e525518b32ee1818ccd2b6bbae3218b746a06de"),
+                viewTag: 194,
+                tokens: addys,
+                values: nums,
+                extraMetadata: bytes("")
+            }),
+            0.1 ether
+        );
+
+        assertEq(firstReceiver.balance, 10**19 - 0.61 ether);
+        assertGt(IERC20(dai).balanceOf(secondReceiver), 0);
+        assertEq(secondReceiver.balance, 0.01 ether);
+        assertEq(thirdReceiver.balance, 0.1 ether);
+        assertEq(IERC20(weth).balanceOf(thirdReceiver), 10 ether);
+        assertEq(IERC721(nft).ownerOf(4617), thirdReceiver);
     }
 }

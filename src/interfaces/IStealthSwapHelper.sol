@@ -22,7 +22,7 @@ interface IStealthSwapHelper {
         StealthSwap calldata swap
     ) external payable;
 
-    function stealthSwapPlusLeftover(
+    function stealthSwapAndBatch(
         StealthSwap calldata swap,
         IStealthereum.StealthTransfer calldata transferData,
         uint256 transferValueETH

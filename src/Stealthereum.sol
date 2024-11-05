@@ -197,9 +197,11 @@ contract Stealthereum is IStealthereum {
         if (msgvalue > 0) {
             bool success;
             assembly {
-                success := call(gas(), stealthAddress, callvalue(), 0, 0, 0, 0)
+                success := call(gas(), stealthAddress, msgvalue, 0, 0, 0, 0)
             }
             if (!success) revert NativeTransferFailed();
         }
     }
+
+    receive() external payable {}
 }

@@ -7,8 +7,6 @@ import {
     IStealthereum
 } from "./interfaces/IStealthSwapHelper.sol";
 
-import {console2} from "forge-std/Test.sol";
-
 contract StealthSwapHelper is IStealthSwapHelper {
 
     error ArrayLengthMismatch();
@@ -62,7 +60,7 @@ contract StealthSwapHelper is IStealthSwapHelper {
         );
     }
 
-    function stealthSwapPlusLeftover(
+    function stealthSwapAndBatch(
         StealthSwap calldata swap,
         IStealthereum.StealthTransfer calldata transferData,
         uint256 transferValueETH
@@ -117,4 +115,6 @@ contract StealthSwapHelper is IStealthSwapHelper {
             msgvalues
         );
     }
+
+    receive() external payable {}
 }
