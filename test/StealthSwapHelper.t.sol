@@ -98,9 +98,10 @@ contract StealthSwapTest is TestWrapper {
 
         assertEq(firstReceiver.balance, 10**19 - 0.91 ether);
         assertGt(IERC20(dai).balanceOf(secondReceiver), 0);
+        assertEq(secondReceiver.balance, 0.01 ether);
     }
 
-    function test_stealthSwapMulti() public {
+    function test_stealthSwapAndBatch() public {
         address firstReceiver = 0xBbC640bD5FcbCBe3bb7D6570A2bd94E2d7441BB1;
         address[] memory addys = new address[](2);
         addys[0] = nft;
@@ -135,7 +136,7 @@ contract StealthSwapTest is TestWrapper {
         path[1] = dai;
 
         address secondReceiver = 0x454f193FD7AD2a395Bb54711DF5Ec4662A8E34C1;
-        address thirdReceiver = 0x454f193FD7AD2a395bb54711df5eC4662A8E34ce;
+        address thirdReceiver = 0x454F193fd7aD2A395bB54711dF5EC4662A8e34CA;
         bytes memory swapPayload = abi.encodeWithSelector(IRouter.swapExactETHForTokens.selector, 0, path, address(helper), 999999999999);
 
         vm.prank(firstReceiver);
@@ -169,5 +170,12 @@ contract StealthSwapTest is TestWrapper {
             }),
             0.1 ether
         );
+
+        assertEq(firstReceiver.balance, 10**19 - 0.61 ether);
+        assertGt(IERC20(dai).balanceOf(secondReceiver), 0);
+        assertEq(secondReceiver.balance, 0.01 ether);
+        assertEq(thirdReceiver.balance, 0.1 ether);
+        assertEq(IERC20(weth).balanceOf(thirdReceiver), 10 ether);
+        assertEq(IERC721(nft).ownerOf(4617), thirdReceiver);
     }
 }
