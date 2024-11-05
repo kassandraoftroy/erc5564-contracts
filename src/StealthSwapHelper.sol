@@ -80,6 +80,13 @@ contract StealthSwapHelper is IStealthSwapHelper {
         uint256 outputAmount = ITransferFrom(swap.outputToken).balanceOf(address(this)) - outputTokenBefore;
         if (outputAmount == 0) revert NoSwapOutput();
 
+        for (uint256 i = 0; i < transferData.tokens.length; i++) {
+            address token = transferData.tokens[i];
+            uint256 v = transferData.values[i];
+            ITransferFrom(token).transferFrom(msg.sender, v);
+            ITransferFrom(token).approve(address(stealthereum), v);
+        }
+
         address[] memory tokens = new address[](1);
         tokens[0] = swap.outputToken;
         uint256[] memory values = new uint256[](1);
@@ -100,6 +107,8 @@ contract StealthSwapHelper is IStealthSwapHelper {
         uint256[] memory msgvalues = new uint256[](2);
         msgvalues[0] = swap.nativeTransfer;
         msgvalues[1] = transferValueETH;
+
+        ITransferFrom(swap.outputToken).approve(address(stealtereum), outputAmount);
 
         stealthereum.batchStealthTransfers{value: swap.nativeTransfer+transferValueETH}(
             transfersData,
