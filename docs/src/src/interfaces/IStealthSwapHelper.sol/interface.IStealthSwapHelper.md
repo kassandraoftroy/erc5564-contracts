@@ -1,5 +1,5 @@
 # IStealthSwapHelper
-[Git Source](https://github.com/kassandraoftroy/erc5564-contracts/blob/91e675a8593431c307b57f0a6981365edf53b80c/src/interfaces/IStealthSwapHelper.sol)
+[Git Source](https://github.com/kassandraoftroy/erc5564-contracts/blob/56b59da890edba5d11a512ce0520cf06843bc3a8/src/interfaces/IStealthSwapHelper.sol)
 
 
 ## Functions
@@ -43,6 +43,8 @@ function stealthSwapAndBatch(
 
 ## Structs
 ### StealthSwap
+The StealthSwap struct
+
 
 ```solidity
 struct StealthSwap {
@@ -59,4 +61,20 @@ struct StealthSwap {
     uint256 nativeTransfer;
 }
 ```
+
+**Properties**
+
+|Name|Type|Description|
+|----|----|-----------|
+|`schemeId`|`uint256`|id for the stealth address cryptographic scheme (1 = secp256k1 with view tags)|
+|`stealthAddress`|`address`|the stealth address to transfer to|
+|`ephemeralPubkey`|`bytes`|the ephemeral pubkey used to create the stealth address (and used by recipient to find the private key)|
+|`viewTag`|`uint8`|the view tag for quicker scanning|
+|`extraMetadata`|`bytes`|any extra data to append to the metadata|
+|`inputToken`|`address`|input token address, for swap (use 0xeeee....) for native ETH|
+|`inputAmount`|`uint256`|amount of inputToken to swap|
+|`outputToken`|`address`|address of output token for swap|
+|`swapRouter`|`address`|target contract to call for swap action|
+|`swapPayload`|`bytes`|to call on target contract for swap action|
+|`nativeTransfer`|`uint256`|amount of native ETH to transfer to the stealth address receiving the output of the swap|
 

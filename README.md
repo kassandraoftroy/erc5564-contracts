@@ -1,4 +1,4 @@
-# ERC5564 Contracts
+# Stealth.ereum: ERC5564 Contracts
 
 ERC5564 is the main ERC defining the stealth addresses standard for ethereum. It recently got included. Let's build on it!
 
