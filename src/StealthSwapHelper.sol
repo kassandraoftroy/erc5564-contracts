@@ -7,6 +7,9 @@ import {
     IStealthereum
 } from "./interfaces/IStealthSwapHelper.sol";
 
+/// @title Stealth Swap Helper
+/// @author mrs kzg.eth
+/// @notice router contract for performing an ERC20 token swap before sending the result of the swap to a stealth address
 contract StealthSwapHelper is IStealthSwapHelper {
 
     error ArrayLengthMismatch();
@@ -22,6 +25,7 @@ contract StealthSwapHelper is IStealthSwapHelper {
         stealthereum = IStealthereum(_stealthereum);
     }
 
+    /// @inheritdoc IStealthSwapHelper
     function stealthSwap(
         StealthSwap calldata swap
     ) external payable {
@@ -60,6 +64,7 @@ contract StealthSwapHelper is IStealthSwapHelper {
         );
     }
 
+    /// @inheritdoc IStealthSwapHelper
     function stealthSwapAndBatch(
         StealthSwap calldata swap,
         IStealthereum.StealthTransfer calldata transferData,

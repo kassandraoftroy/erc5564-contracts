@@ -5,8 +5,9 @@ import {IERC5564Announcer} from "./interfaces/IERC5564Announcer.sol";
 import {IToken} from "./interfaces/IToken.sol";
 import {IStealthereum} from "./interfaces/IStealthereum.sol";
 
-/// @notice stealth.ereum is a ERC5564 compliant stealth addresses integration with a convenient metadata standard
-/// TL;DR use stealthTransfer method to privately transfer ETH / ERC20 / ERC721 directly to a stealth address and announcing it
+/// @title stealth.ereum
+/// @author mrs kzg.eth
+/// @notice ERC5564 compliant stealth addresses integration with an extended metadata standard
 contract Stealthereum is IStealthereum {
 
     bytes32 internal constant _ETH_AND_SELECTOR = 0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee0000000000000000;
@@ -19,6 +20,7 @@ contract Stealthereum is IStealthereum {
         announcer = IERC5564Announcer(_announcer);
     }
 
+    /// @inheritdoc IStealthereum
     function stealthTransfer(
         StealthTransfer calldata transferData
     ) external payable {
@@ -46,6 +48,7 @@ contract Stealthereum is IStealthereum {
         );
     }
 
+    /// @inheritdoc IStealthereum
     function batchStealthTransfers(
         StealthTransfer[] calldata transfersData,
         uint256[] calldata msgvalues
@@ -84,6 +87,7 @@ contract Stealthereum is IStealthereum {
         if (endValue != startValue) revert WrongMsgValue();
     }
 
+    /// @inheritdoc IStealthereum
     function parseMetadata(
         bytes memory metadata
     ) external pure returns (uint256 valueETH, address[] memory tokens, uint256[] memory values, uint256 extraDataLen) {
@@ -145,6 +149,7 @@ contract Stealthereum is IStealthereum {
         extraDataLen = metadata.length - start;
     }
 
+    /// @inheritdoc IStealthereum
     function getMetadata(
         uint256 msgvalue,
         uint8 viewTag,
