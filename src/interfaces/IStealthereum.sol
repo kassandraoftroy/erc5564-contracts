@@ -8,20 +8,21 @@ interface IStealthereum {
     error NativeTransferFailed();
     error ArrayLengthMismatch();
 
+    /// @notice The StealthTransfer struct
+    /// @param schemeId id for the stealth address cryptographic scheme (1 = secp256k1 with view tags)
+    /// @param stealthAddress the stealth address to transfer to
+    /// @param ephemeralPubkey the ephemeral pubkey used to create the stealth address (and used by recipient to find the private key)
+    /// @param viewTag the view tag for quicker scanning
+    /// @param tokens list of tokens to transfer to the stealth address (supports both ERC20 and ERC721)
+    /// @param values the amount (or tokenId, in the case of ERC721) to transfer per token address
+    /// @param extraMetadata any extra data to append to the metadata
     struct StealthTransfer {
-        /// id for the stealth address cryptographic scheme (1 = secp256k1 with view tags)
         uint256 schemeId; 
-        /// the stealth address to transfer to
         address stealthAddress;
-        /// the ephemeral pubkey used to create the stealth address (and used by recipient to find the private key)
         bytes ephemeralPubkey;
-        /// the view tag for quicker scanning
         uint8 viewTag;
-        /// the list of tokens to transfer to the stealth address (supports both ERC20 and ERC721)
         address[] tokens;
-        /// the amount (or tokenId, in the case of ERC721) to transfer per token address
         uint256[] values;
-        /// any extra data to append to the metadata
         bytes extraMetadata;
     }
 

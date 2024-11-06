@@ -33,3 +33,13 @@ NOTE: fill in `.env` see `.env.example` before running tests
 ```
 forge test -vv
 ```
+
+## Docs
+
+run docs locally with
+
+```
+forge doc --serve --port 4000
+```
+
+then navigate to https://localhost:4000

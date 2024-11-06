@@ -4,28 +4,29 @@ pragma solidity 0.8.22;
 import {IStealthereum} from "./IStealthereum.sol";
 
 interface IStealthSwapHelper {
+    /// @notice The StealthSwap struct
+    /// @param schemeId id for the stealth address cryptographic scheme (1 = secp256k1 with view tags)
+    /// @param stealthAddress the stealth address to transfer to
+    /// @param ephemeralPubkey the ephemeral pubkey used to create the stealth address (and used by recipient to find the private key)
+    /// @param viewTag the view tag for quicker scanning
+    /// @param extraMetadata any extra data to append to the metadata
+    /// @param inputToken input token address, for swap (use 0xeeee....) for native ETH
+    /// @param inputAmount amount of inputToken to swap
+    /// @param outputToken address of output token for swap
+    /// @param swapRouter target contract to call for swap action
+    /// @param swapPayload to call on target contract for swap action
+    /// @param nativeTransfer amount of native ETH to transfer to the stealth address receiving the output of the swap
     struct StealthSwap {
-        /// id for the stealth address cryptographic scheme (1 = secp256k1 with view tags)
         uint256 schemeId;
-        /// the stealth address to transfer to
         address stealthAddress;
-        /// the ephemeral pubkey used to create the stealth address (and used by recipient to find the private key)
         bytes ephemeralPubkey;
-        /// the view tag for quicker scanning
         uint8 viewTag;
-        /// any extra data to append to the metadata
         bytes extraMetadata;
-        /// input token address, for swap (use 0xeeee....) for native ETH
         address inputToken;
-        /// amount of inputToken to swap
         uint256 inputAmount;
-        /// output token address
         address outputToken;
-        /// target contract to call for swap action
         address swapRouter;
-        /// payload to call on target contract for swap action
         bytes swapPayload;
-        /// amount of native ETH to transfer to the stealth address receiving the output of the swap
         uint256 nativeTransfer;
     }
 
