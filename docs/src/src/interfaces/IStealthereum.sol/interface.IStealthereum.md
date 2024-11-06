@@ -1,5 +1,5 @@
 # IStealthereum
-[Git Source](https://github.com/kassandraoftroy/erc5564-contracts/blob/17f8300a258dafc126636bf4c6b2cff57409473e/src/interfaces/IStealthereum.sol)
+[Git Source](https://github.com/kassandraoftroy/erc5564-contracts/blob/9c7474868e718b99a2359579698b9994ca0ad2e8/src/interfaces/IStealthereum.sol)
 
 
 ## Functions
@@ -47,7 +47,7 @@ function batchStealthTransfers(StealthTransfer[] calldata transfersData, uint256
 
 parse metadata to check for valid formatting and what transfers it encodes
 
-*METADATA SPEC: the first n*56+1 bytes of metadata MUST conform to the following format (where `n` is number of native or token transfers).
+*METADATA SPEC: the first n(56+1) bytes of metadata MUST conform to the following format (where `n` is number of native or token transfers).
 First byte MUST be a view tag (if no view tag, can be any arbitrary byte but should be 0x00).
 IF forwarding the native token (e.g. ETH) next 56 bytes MUST be 24 bytes of 0xee + 32 byte uint matching msg.value.
 Next 56 byte chunks MAY start with 0x23b872dd (transferFrom) to be considered a token transfer.
@@ -74,7 +74,7 @@ function parseMetadata(bytes memory metadata)
 |`valueETH`|`uint256`|amount of native ETH transferred|
 |`tokens`|`address[]`|list of token transfers|
 |`values`|`uint256[]`|values transferred in token transfers|
-|`extraDataLen`|`uint256`|length of custom extra metadata (the last `extraDataLen` bytes of the submitted metadata are custom)|
+|`extraDataLen`|`uint256`|length of custom extra data appended to the standard metadata format|
 
 
 ### getMetadata

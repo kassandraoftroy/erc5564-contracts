@@ -156,23 +156,23 @@ contract Stealthereum is IStealthereum {
         address[] calldata tokens,
         uint256[] calldata values,
         bytes memory extraMetadata
-    ) public pure returns (bytes memory) {
+    ) public pure returns (bytes memory metadata) {
         uint256 len = tokens.length;
         if (len != values.length) revert ArrayLengthMismatch();
 
         bool sendsETH = msgvalue > 0;
         uint256 metadataLen = sendsETH ? 56*(len+1)+1 : 56*len+1;
-        bytes memory metadata = new bytes(metadataLen);
+        bytes memory data = new bytes(metadataLen);
 
         assembly {
-            let startPtr := add(metadata, 0x21)
+            let startPtr := add(data, 0x21)
             let n := div(sub(metadataLen, 0x01), 0x38)
-            mstore8(add(metadata, 0x20), viewTag)
+            mstore8(add(data, 0x20), viewTag)
             if gt(sendsETH, 0) {
-                mstore(add(metadata, 0x21), _ETH_AND_SELECTOR)
-                mstore(add(metadata, 0x39), msgvalue)
+                mstore(add(data, 0x21), _ETH_AND_SELECTOR)
+                mstore(add(data, 0x39), msgvalue)
 
-                startPtr := add(metadata, 0x59)
+                startPtr := add(data, 0x59)
                 n := sub(n, 0x01)
             }
             for {let i := 0x00} lt(i, n) {i := add(i, 0x01)} {
@@ -185,7 +185,7 @@ contract Stealthereum is IStealthereum {
             }
         }
 
-        return bytes.concat(metadata, extraMetadata);
+        metadata = bytes.concat(data, extraMetadata);
     }
 
     function _doTransfers(
