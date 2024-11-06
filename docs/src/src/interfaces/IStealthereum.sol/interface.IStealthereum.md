@@ -1,5 +1,5 @@
 # IStealthereum
-[Git Source](https://github.com/kassandraoftroy/erc5564-contracts/blob/56b59da890edba5d11a512ce0520cf06843bc3a8/src/interfaces/IStealthereum.sol)
+[Git Source](https://github.com/kassandraoftroy/erc5564-contracts/blob/838a3a1db6fd0665dd26315f162e0a3c9f8ffbea/src/interfaces/IStealthereum.sol)
 
 
 ## Functions
@@ -47,7 +47,7 @@ function batchStealthTransfers(StealthTransfer[] calldata transfersData, uint256
 
 parse metadata to check for valid formatting and what transfers it encodes
 
-*METADATA SPEC: the first n(56+1) bytes of metadata MUST conform to the following format (where `n` is number of native or token transfers).
+*METADATA SPEC: the first (n)(56)+1 bytes of metadata MUST conform to the following format (where `n` is number of native or token transfers).
 First byte MUST be a view tag (if no view tag, can be any arbitrary byte but should be 0x00).
 IF forwarding the native token (e.g. ETH) next 56 bytes MUST be 24 bytes of 0xee + 32 byte uint matching msg.value.
 Next 56 byte chunks MAY start with 0x23b872dd (transferFrom) to be considered a token transfer.

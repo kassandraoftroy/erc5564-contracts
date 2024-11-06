@@ -1,5 +1,5 @@
 # IERC5564Announcer
-[Git Source](https://github.com/kassandraoftroy/erc5564-contracts/blob/56b59da890edba5d11a512ce0520cf06843bc3a8/src/interfaces/IERC5564Announcer.sol)
+[Git Source](https://github.com/kassandraoftroy/erc5564-contracts/blob/838a3a1db6fd0665dd26315f162e0a3c9f8ffbea/src/interfaces/IERC5564Announcer.sol)
 
 NOTE very slight adaptation to code found here https://eips.ethereum.org/EIPS/eip-5564
 
