@@ -1,5 +1,5 @@
 # IToken
-[Git Source](https://github.com/kassandraoftroy/erc5564-contracts/blob/9c7474868e718b99a2359579698b9994ca0ad2e8/src/interfaces/IToken.sol)
+[Git Source](https://github.com/kassandraoftroy/erc5564-contracts/blob/56b59da890edba5d11a512ce0520cf06843bc3a8/src/interfaces/IToken.sol)
 
 
 ## Functions

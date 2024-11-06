@@ -1,4 +1,4 @@
-# ERC5564 Contracts
+# Stealth.ereum: ERC5564 Contracts
 
 ERC5564 is the main ERC defining the stealth addresses standard for ethereum. It recently got included. Let's build on it!
 
@@ -33,3 +33,13 @@ NOTE: fill in `.env` see `.env.example` before running tests
 ```
 forge test -vv
 ```
+
+## Docs
+
+run docs locally with
+
+```
+forge doc --serve --port 4000
+```
+
+then navigate to https://localhost:4000

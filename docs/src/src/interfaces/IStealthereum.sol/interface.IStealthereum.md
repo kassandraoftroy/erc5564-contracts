@@ -1,5 +1,5 @@
 # IStealthereum
-[Git Source](https://github.com/kassandraoftroy/erc5564-contracts/blob/9c7474868e718b99a2359579698b9994ca0ad2e8/src/interfaces/IStealthereum.sol)
+[Git Source](https://github.com/kassandraoftroy/erc5564-contracts/blob/56b59da890edba5d11a512ce0520cf06843bc3a8/src/interfaces/IStealthereum.sol)
 
 
 ## Functions
@@ -135,6 +135,8 @@ error ArrayLengthMismatch();
 
 ## Structs
 ### StealthTransfer
+The StealthTransfer struct
+
 
 ```solidity
 struct StealthTransfer {
@@ -147,4 +149,16 @@ struct StealthTransfer {
     bytes extraMetadata;
 }
 ```
+
+**Properties**
+
+|Name|Type|Description|
+|----|----|-----------|
+|`schemeId`|`uint256`|id for the stealth address cryptographic scheme (1 = secp256k1 with view tags)|
+|`stealthAddress`|`address`|the stealth address to transfer to|
+|`ephemeralPubkey`|`bytes`|the ephemeral pubkey used to create the stealth address (and used by recipient to find the private key)|
+|`viewTag`|`uint8`|the view tag for quicker scanning|
+|`tokens`|`address[]`|list of tokens to transfer to the stealth address (supports both ERC20 and ERC721)|
+|`values`|`uint256[]`|the amount (or tokenId, in the case of ERC721) to transfer per token address|
+|`extraMetadata`|`bytes`|any extra data to append to the metadata|
 
