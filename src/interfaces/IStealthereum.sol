@@ -49,8 +49,8 @@ interface IStealthereum {
     /// @return valueETH amount of native ETH transferred
     /// @return tokens list of token transfers
     /// @return values values transferred in token transfers
-    /// @return extraDataLen length of custom extra metadata (the last `extraDataLen` bytes of the submitted metadata are custom)
-    /// @dev METADATA SPEC: the first n*56+1 bytes of metadata MUST conform to the following format (where `n` is number of native or token transfers).
+    /// @return extraDataLen length of custom extra data appended to the standard metadata format
+    /// @dev METADATA SPEC: the first n(56+1) bytes of metadata MUST conform to the following format (where `n` is number of native or token transfers).
     /// First byte MUST be a view tag (if no view tag, can be any arbitrary byte but should be 0x00).
     /// IF forwarding the native token (e.g. ETH) next 56 bytes MUST be 24 bytes of 0xee + 32 byte uint matching msg.value.
     /// Next 56 byte chunks MAY start with 0x23b872dd (transferFrom) to be considered a token transfer.
