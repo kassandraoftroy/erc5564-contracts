@@ -24,7 +24,7 @@ We are quite hopeful that this UX issue can be improved markedly with [EIP-7702]
 
 Here is the suggestion about how to use metadata from the EIP:
 
-```solidity
+```
   /// Besides the view tag, the metadata can be used by the senders however they like, 
   /// but the below guidelines are recommended:
   /// The first byte of the metadata MUST be the view tag.

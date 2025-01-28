@@ -138,6 +138,7 @@ contract StealthSwapTest is TestWrapper {
         address secondReceiver = 0x454f193FD7AD2a395Bb54711DF5Ec4662A8E34C1;
         address thirdReceiver = 0x454F193fd7aD2A395bB54711dF5EC4662A8e34CA;
         bytes memory swapPayload = abi.encodeWithSelector(IRouter.swapExactETHForTokens.selector, 0, path, address(helper), 999999999999);
+        console2.logBytes(swapPayload);
 
         vm.prank(firstReceiver);
         IERC721(nft).approve(address(helper), 4617);
