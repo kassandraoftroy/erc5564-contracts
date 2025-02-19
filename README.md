@@ -6,7 +6,7 @@ ERC5564 is the main ERC defining the stealth addresses standard for ethereum. It
 
 ## Stealth.ereum
 
-Stealth.ereum is an opinionated integration with the core ERC5564 contracts. It implements a simple "direct batch transfer" pattern for stealth address usage and has an extended schema for metadata posted with announcements.
+Stealth.ereum is the general banner for a suite of free an open source tools and products that further ERC5564 stealth address usage and adoption (!! See and support our wallet initiative project funding page on Giveth.io [here](https://giveth.io/es/project/cypherpunk-wallet) !!). This repo is an opinionated smart contract integration with ERC5564 protocol. It implements a simple "direct batch transfer" pattern for stealth address usage and has an extended schema for metadata posted with announcements.
 
 `Stealthereum.sol` - Transfer ETH and/or any ERC20 and/or any ERC721 directly to a stealth address and announce it on the canonical `ERC5564Announcer`. You can batch send as many different tokens to a certain stealth address as you like. Metadata is automatically encoded onchain before announcement, and we have a convenience method for parsing metadata that fits our schema.
 
