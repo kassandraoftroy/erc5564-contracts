@@ -17,7 +17,7 @@ contract StealthSwapHelper is IStealthSwapHelper {
     error WrongMsgValue();
     error SwapCallFailed();
 
-    address internal ETH = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
+    address constant internal ETH = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
 
     IStealthereum public immutable stealthereum;
 
